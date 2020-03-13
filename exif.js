@@ -4,6 +4,10 @@
 
     var root = this;
 
+    var isBrowser = typeof navigator !== 'undefined';
+
+    var hasBuffer = typeof Buffer !== 'undefined';
+
     var EXIF = function(obj) {
         if (obj instanceof EXIF) return obj;
         if (!(this instanceof EXIF)) return new EXIF(obj);
@@ -717,9 +721,17 @@
                     // extract the thumbnail
                         var tOffset = tiffStart + thumbTags.JpegIFOffset;
                         var tLength = thumbTags.JpegIFByteCount;
-                        thumbTags['blob'] = new Blob([new Uint8Array(dataView.buffer, tOffset, tLength)], {
-                            type: 'image/jpeg'
-                        });
+                        var uint8 = new Uint8Array(dataView.buffer, tOffset, tLength);
+                        if (isBrowser) {
+                            thumbTags['blob'] = new Blob([uint8], {
+                                type: 'image/jpeg'
+                            });
+                        } else if (hasBuffer) {
+                            thumbTags['data'] = {
+                                buffer: Buffer.from(uint8.buffer),
+                                mimetype: 'image/jpeg'
+                            };
+                        }
                     }
                 break;
 
